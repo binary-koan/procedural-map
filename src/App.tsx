@@ -32,7 +32,7 @@ class App extends React.Component {
     const initialPoints = randomPoints(new RandomNumberGenerator(seed), {
       width: 1000,
       height: 1000,
-      count: 1000
+      count: 10
     })
     const improveResult = improvePoints(initialPoints)
 
@@ -51,7 +51,7 @@ class App extends React.Component {
     this.setState({ display: `voroniStep${index}` })
   }
 
-  displayToggle(title: string, onClick: () => undefined) {
+  displayToggle(title: string, onClick: () => void) {
     return <button type="button" onClick={onClick}>{title}</button>
   }
 
@@ -75,6 +75,7 @@ class App extends React.Component {
           {this.state.improveResult.steps.map((_, i) =>
             <div key={i}>{this.displayToggle(`Voroni iteration ${i + 1}`, this.toggleVoroniStep.bind(this, i))}</div>
           )}
+          {this.displayToggle("Map polygons", () => this.setState({ display: "mapPolygons" }))}
         </div>
 
         <svg className="App-view" viewBox="0 0 1000 1000">
@@ -82,6 +83,10 @@ class App extends React.Component {
             {this.state.initialPoints.map((point, i) => <circle key={i} cx={point.x} cy={point.y} r="2" fill="#000" />)}
           </g>
           {this.state.improveResult.steps.map((step, i) => this.voroniResult(i, step.points, step.polygons))}
+          <g className={this.state.display === "mapPolygons" ? "group" : "group is-hidden"}>
+            {this.state.improveResult.mapPolygons.map((polygon, i) =>
+              <path key={i} d={pathDefinition(polygon)} stroke="#0f0" fill="none" />)}
+          </g>
         </svg>
       </div>
     )
