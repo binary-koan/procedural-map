@@ -1,5 +1,5 @@
-import RandomNumberGenerator from "./RandomNumberGenerator"
-import Point from "../types/Point"
+import RandomNumberGenerator from "../RandomNumberGenerator"
+import Point from "../../types/Point"
 
 export default function randomPoints(
   rng: RandomNumberGenerator,

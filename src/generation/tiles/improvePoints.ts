@@ -1,7 +1,6 @@
 import Voronoi, { Diagram } from "voronoi"
-import Point from "../types/Point"
-
-export type MapPolygon = Point[] // [Point, Point, Point]
+import Point from "../../types/Point"
+import { MapPolygon } from "../../types/MapTile"
 
 export interface ImproveResult {
   mapPolygons: MapPolygon[],
@@ -42,7 +41,7 @@ function centerPoint(points: Point[]): Point {
 function mapPolygons(diagram: Diagram): MapPolygon[] {
   let adjacentPoints = findAdjacents(diagram)
 
-  let triangles = {} as { [id: string]: Point[] }
+  let triangles = {} as { [id: string]: MapPolygon }
 
   diagram.edges.forEach(edge => {
     let adjacentToLeft = adjacentPoints.get(edge.lSite) || []
@@ -53,9 +52,9 @@ function mapPolygons(diagram: Diagram): MapPolygon[] {
     thirdPoints.forEach(thirdPoint => {
       let sortedPoints = [edge.lSite, edge.rSite, thirdPoint].sort((a, b) =>
         a.y === b.y ? (a.x - b.x) : (a.y - b.y)
-      )
+      ) as [Point, Point, Point]
       // Crappy hack to avoid duplication. Why, JS, why?
-      triangles[JSON.stringify(sortedPoints)] = sortedPoints
+      triangles[JSON.stringify(sortedPoints)] = { vertices: sortedPoints, center: centerPoint(sortedPoints) }
     })
   })
 
