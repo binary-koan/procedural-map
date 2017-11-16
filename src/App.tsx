@@ -89,11 +89,11 @@ class App extends React.Component {
   tileWithHeight(tile: MapTile, index: number) {
     let fill: string
 
-    if (tile.center.z > 0) {
-      let strength = Math.floor(tile.center.z * 200 + 16).toString(16)
+    if (tile.centerPoint.z > 0) {
+      let strength = Math.floor(tile.centerPoint.z * 200 + 16).toString(16)
       fill = "#" + strength + "ff" + strength
     } else {
-      let strength = Math.floor(128 + tile.center.z * 100).toString(16)
+      let strength = Math.floor(128 + tile.centerPoint.z * 100).toString(16)
       fill = "#" + strength + strength + "ff"
     }
 

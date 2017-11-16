@@ -23,7 +23,7 @@ function applyNoise(tiles: MapTile[], noise: SimplexNoise, scale: number) {
 }
 
 function fixHeights(tiles: MapTile[], landProportion: number) {
-  const sortedByHeight = tiles.sort((a, b) => a.center.z - b.center.z)
+  const sortedByHeight = tiles.sort((a, b) => a.centerPoint.z - b.centerPoint.z)
   const splitPoint = Math.floor(tiles.length * (1 - landProportion))
 
   const waterTiles = sortedByHeight.slice(0, splitPoint).map(tile => tile.flatten(0))
@@ -33,8 +33,8 @@ function fixHeights(tiles: MapTile[], landProportion: number) {
 }
 
 function normalize(tiles: MapTile[]) {
-  const minHeight = tiles[0].center.z
-  const maxHeight = tiles[tiles.length - 1].center.z
+  const minHeight = tiles[0].lowestPoint.z
+  const maxHeight = tiles[tiles.length - 1].highestPoint.z
 
   return tiles.map(tile => tile.normalize(minHeight, maxHeight))
 }
