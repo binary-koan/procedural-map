@@ -19,28 +19,22 @@ export default function addNoise(
 }
 
 function applyNoise(tiles: MapTile[], noise: SimplexNoise, scale: number) {
-  return tiles.map(tile => ({
-    ...tile,
-    height: tile.height + noise.noise2D(tile.center.x / scale, tile.center.y / scale)
-  }))
+  return tiles.map(tile => tile.applyNoise((x, y) => noise.noise2D(x / scale, y / scale)))
 }
 
 function fixHeights(tiles: MapTile[], landProportion: number) {
-  const sortedByHeight = tiles.sort((a, b) => a.height - b.height)
+  const sortedByHeight = tiles.sort((a, b) => a.center.z - b.center.z)
   const splitPoint = Math.floor(tiles.length * (1 - landProportion))
 
-  const waterTiles = sortedByHeight.slice(0, splitPoint).map(tile => ({ ...tile, height: 0 }))
+  const waterTiles = sortedByHeight.slice(0, splitPoint).map(tile => tile.flatten(0))
   const landTiles = normalize(sortedByHeight.slice(splitPoint))
 
   return waterTiles.concat(landTiles)
 }
 
 function normalize(tiles: MapTile[]) {
-  const minHeight = tiles[0].height
-  const maxHeight = tiles[tiles.length - 1].height
+  const minHeight = tiles[0].center.z
+  const maxHeight = tiles[tiles.length - 1].center.z
 
-  return tiles.map(tile => ({
-    ...tile,
-    height: (tile.height - minHeight) / (maxHeight - minHeight)
-  }))
+  return tiles.map(tile => tile.normalize(minHeight, maxHeight))
 }
