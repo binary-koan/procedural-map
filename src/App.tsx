@@ -14,6 +14,7 @@ function pathDefinition(polygon: Point[]): string {
 
 class App extends React.Component {
   state: {
+    complexity: number,
     seed: string,
     display: string,
     initialPoints: Point[],
@@ -24,29 +25,30 @@ class App extends React.Component {
 
   constructor(props: {}) {
     super(props)
+    const complexity = 1500
     const seed = "totally random"
 
     this.state = {
       display: "",
+      complexity,
       seed,
-      ...this.doGeneration(seed)
+      ...this.doGeneration(complexity, seed)
     }
   }
 
-  doGeneration(seed: string) {
+  doGeneration(complexity: number, seed: string) {
     const rng = new RandomNumberGenerator(seed)
-    const count = 1500
 
     const initialPoints = randomPoints(rng, {
       width: 1500,
       height: 1000,
-      count: count
+      count: complexity
     })
     const improveResult = improvePoints(initialPoints)
     const baseHeightmap = initializeHeightmap(improveResult.mapPolygons)
     const heightWithNoise = addNoise(rng, baseHeightmap, {
-      minScale: count / 10,
-      maxScale: count / 2,
+      minScale: 150,
+      maxScale: 750,
       landProportion: 0.4,
       iterations: 4
     })
@@ -54,8 +56,13 @@ class App extends React.Component {
     return { initialPoints, improveResult, baseHeightmap, heightWithNoise }
   }
 
+  setComplexity(value: string) {
+    let complexity = parseInt(value, 10)
+    this.setState({ complexity, ...this.doGeneration(complexity, this.state.seed) })
+  }
+
   setSeed(seed: string) {
-    this.setState({ seed: seed, ...this.doGeneration(seed) })
+    this.setState({ seed: seed, ...this.doGeneration(this.state.complexity, seed) })
   }
 
   toggleInitialPoints() {
@@ -105,16 +112,20 @@ class App extends React.Component {
     return (
       <div className="App">
         <div className="App-header">
+          <h3>Complexity</h3>
+          <input type="number" value={this.state.complexity} onChange={e => this.setComplexity(e.target.value)} />
           <h3>Seed</h3>
           <input type="text" value={this.state.seed} onChange={e => this.setSeed(e.target.value)} />
           <h3>Display</h3>
-          {this.displayToggle("Initial points", this.toggleInitialPoints.bind(this))}
-          {this.state.improveResult.steps.map((_, i) =>
-            <div key={i}>{this.displayToggle(`Voroni iteration ${i + 1}`, this.toggleVoroniStep.bind(this, i))}</div>
-          )}
-          {this.displayToggle("Map polygons", () => this.setState({ display: "mapPolygons" }))}
-          {this.displayToggle("Base height", () => this.setState({ display: "baseHeightmap" }))}
-          {this.displayToggle("Height with noise", () => this.setState({ display: "heightWithNoise" }))}
+          <div className="App-header-buttons">
+            {this.displayToggle("Initial points", this.toggleInitialPoints.bind(this))}
+            {this.state.improveResult.steps.map((_, i) =>
+              <div key={i}>{this.displayToggle(`Voroni iteration ${i + 1}`, this.toggleVoroniStep.bind(this, i))}</div>
+            )}
+            {this.displayToggle("Map polygons", () => this.setState({ display: "mapPolygons" }))}
+            {this.displayToggle("Base height", () => this.setState({ display: "baseHeightmap" }))}
+            {this.displayToggle("Height with noise", () => this.setState({ display: "heightWithNoise" }))}
+          </div>
         </div>
 
         <svg className="App-view" viewBox="0 0 1500 1000">
