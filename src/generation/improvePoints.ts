@@ -3,12 +3,12 @@ import Point from "../types/Point"
 
 export type MapPolygon = [Point, Point, Point]
 
-interface Result {
+export interface ImproveResult {
   mapPolygons: MapPolygon[],
   steps: { points: Point[], polygons: Point[][] }[]
 }
 
-export default function improvePoints(points: Point[], stepCount = 3): Result {
+export default function improvePoints(points: Point[], stepCount: number = 3): ImproveResult {
   const steps = [voroniStep(points)]
   for (var i = 1; i < stepCount; i++) {
     steps.push(voroniStep(steps[i - 1].points))
