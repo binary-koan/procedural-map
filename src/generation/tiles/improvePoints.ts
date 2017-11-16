@@ -20,7 +20,7 @@ export default function improvePoints(points: Point[], stepCount: number = 3): I
 }
 
 function voroniStep(previousPoints: Point[]) {
-  const result = new Voronoi().compute(previousPoints, { xl: 0, xr: 1000, yt: 0, yb: 1000 })
+  const result = new Voronoi().compute(previousPoints, { xl: 0, xr: 1500, yt: 0, yb: 1000 })
 
   const polygons = result.cells.map(cell =>
     cell.halfedges.map(e => e.getStartpoint())

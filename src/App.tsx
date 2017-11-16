@@ -35,16 +35,21 @@ class App extends React.Component {
 
   doGeneration(seed: string) {
     const rng = new RandomNumberGenerator(seed)
-    const count = 1000
+    const count = 1500
 
     const initialPoints = randomPoints(rng, {
-      width: 1000,
+      width: 1500,
       height: 1000,
       count: count
     })
     const improveResult = improvePoints(initialPoints)
     const baseHeightmap = initializeHeightmap(improveResult.mapPolygons)
-    const heightWithNoise = addNoise(rng, baseHeightmap, { scale: count / 5 })
+    const heightWithNoise = addNoise(rng, baseHeightmap, {
+      minScale: count / 10,
+      maxScale: count / 2,
+      landProportion: 0.4,
+      iterations: 4
+    })
 
     return { initialPoints, improveResult, baseHeightmap, heightWithNoise }
   }
@@ -75,9 +80,25 @@ class App extends React.Component {
   }
 
   tileWithHeight(tile: MapTile, index: number) {
-    let greyValue = Math.floor(tile.height + 80).toString(16)
+    let fill: string
 
-    return <path key={index} d={pathDefinition(tile.vertices)} fill={"#" + greyValue + greyValue + greyValue} />
+    if (tile.height > 0) {
+      let strength = Math.floor(tile.height * 200 + 16).toString(16)
+      fill = "#" + strength + "ff" + strength
+    } else {
+      let strength = Math.floor(128 + tile.height * 100).toString(16)
+      fill = "#" + strength + strength + "ff"
+    }
+
+    // if (tile.height > 0) {
+    //   let greyValue = Math.floor(tile.height * 128 + 127).toString(16)
+    //   fill = "#" + greyValue + greyValue + greyValue
+    // } else {
+    //   let blueValue = Math.floor(255 + tile.height * 128).toString(16)
+    //   fill = "#8080" + blueValue
+    // }
+
+    return <path key={index} d={pathDefinition(tile.vertices)} fill={fill} />
   }
 
   render() {
@@ -96,7 +117,7 @@ class App extends React.Component {
           {this.displayToggle("Height with noise", () => this.setState({ display: "heightWithNoise" }))}
         </div>
 
-        <svg className="App-view" viewBox="0 0 1000 1000">
+        <svg className="App-view" viewBox="0 0 1500 1000">
           <g className={this.state.display === "initialPoints" ? "group" : "group is-hidden"}>
             {this.state.initialPoints.map((point, i) => <circle key={i} cx={point.x} cy={point.y} r="2" fill="#000" />)}
           </g>
