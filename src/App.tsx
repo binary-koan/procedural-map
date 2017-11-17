@@ -24,6 +24,7 @@ class App extends React.Component {
     initialPoints?: Point[],
     improveResult?: ImproveResult,
     baseMap?: Map,
+    noiseSteps?: Map[],
     heightWithNoise?: Map,
     waterFlow?: WaterFlowResult[]
   }
@@ -54,6 +55,8 @@ class App extends React.Component {
         this.setState({ improveResult: data.result })
       } else if (data.type === "BASE_MAP") {
         this.setState({ baseMap: Map.deserialize(data.result) })
+      } else if (data.type === "NOISE_STEPS") {
+        this.setState({ noiseSteps: data.result.map(Map.deserialize) })
       } else if (data.type === "HEIGHT_WITH_NOISE") {
         this.setState({ heightWithNoise: Map.deserialize(data.result) })
       } else if (data.type === "WATER_FLOW") {
@@ -97,7 +100,17 @@ class App extends React.Component {
         <div key={i}>{this.displayToggle(`Voronoi iteration ${i + 1}`, true, [DisplayLayer.Voronoi], i)}</div>
       )
     } else {
-      return this.displayToggle(`Voroni iterations`, false)
+      return this.displayToggle("Voroni iterations", false)
+    }
+  }
+
+  noiseStepToggles() {
+    if (this.state.noiseSteps) {
+      return this.state.noiseSteps.map((_, i) =>
+        <div key={i}>{this.displayToggle(`Noise iteration ${i + 1}`, true, [DisplayLayer.NoiseStep], i)}</div>
+      )
+    } else {
+      return this.displayToggle("Noise iterations", false)
     }
   }
 
@@ -118,6 +131,7 @@ class App extends React.Component {
               DisplayLayer.MapPolygons, DisplayLayer.PolygonNeighbours
             ])}
             {this.displayToggle("Base height", Boolean(this.state.baseMap), [DisplayLayer.BaseHeight])}
+            {this.noiseStepToggles()}
             {this.displayToggle("Height with noise", Boolean(this.state.heightWithNoise), [
               DisplayLayer.HeightWithNoise
             ])}
@@ -133,6 +147,7 @@ class App extends React.Component {
           initialPoints={this.state.initialPoints}
           improveResult={this.state.improveResult}
           baseMap={this.state.baseMap}
+          noiseSteps={this.state.noiseSteps}
           heightWithNoise={this.state.heightWithNoise}
           waterFlow={this.state.waterFlow}
         />

@@ -2,12 +2,18 @@ import RandomNumberGenerator from "../RandomNumberGenerator"
 import { Map, MapTile } from "../../types/MapTile"
 import SimplexNoise from "simplex-noise"
 
+interface AddNoiseResult {
+  steps: Map[],
+  result: Map
+}
+
 export default function addNoise(
   rng: RandomNumberGenerator,
   map: Map,
   options: { minScale: number, maxScale: number, landProportion: number, iterations: number }
-): Map {
+): AddNoiseResult {
   const noise = new SimplexNoise(rng.random)
+  const steps = []
 
   let tiles = map.tiles
   let scale = options.minScale
@@ -15,9 +21,13 @@ export default function addNoise(
   for (var i = 0; i < options.iterations; i++) {
     tiles = applyNoise(tiles, noise, scale)
     scale += (options.maxScale - options.minScale) / (options.iterations - 1)
+    steps.push(new Map(tiles, map.neighbours))
   }
 
-  return new Map(fixHeights(tiles, options.landProportion), map.neighbours)
+  return {
+    steps,
+    result: new Map(fixHeights(tiles, options.landProportion), map.neighbours)
+  }
 }
 
 function applyNoise(tiles: MapTile[], noise: SimplexNoise, scale: number) {

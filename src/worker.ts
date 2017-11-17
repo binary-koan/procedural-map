@@ -30,8 +30,9 @@ onmessage = message => {
     landProportion: 0.4,
     iterations: 4
   })
-  postMessage({ type: "HEIGHT_WITH_NOISE", result: heightWithNoise.serialize() } as MessageFromWorker)
+  postMessage({ type: "NOISE_STEPS", result: heightWithNoise.steps.map(map => map.serialize()) } as MessageFromWorker)
+  postMessage({ type: "HEIGHT_WITH_NOISE", result: heightWithNoise.result.serialize() } as MessageFromWorker)
 
-  const waterFlow = calculateWaterFlow(heightWithNoise)
+  const waterFlow = calculateWaterFlow(heightWithNoise.result)
   postMessage({ type: "WATER_FLOW", result: waterFlow } as MessageFromWorker)
 }

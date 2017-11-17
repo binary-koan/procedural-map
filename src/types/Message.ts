@@ -9,5 +9,6 @@ export type MessageFromWorker =
   { type: "INITIAL_POINTS", result: Point[] } |
   { type: "IMPROVED_RESULT", result: ImproveResult } |
   { type: "BASE_MAP", result: MapData } |
+  { type: "NOISE_STEPS", result: MapData[] } |
   { type: "HEIGHT_WITH_NOISE", result: MapData } |
   { type: "WATER_FLOW", result: WaterFlowResult[] }

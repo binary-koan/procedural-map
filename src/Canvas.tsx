@@ -14,6 +14,7 @@ export enum DisplayLayer {
   MapPolygons,
   PolygonNeighbours,
   BaseHeight,
+  NoiseStep,
   HeightWithNoise,
   WaterFlow
 }
@@ -24,6 +25,7 @@ interface Props {
   initialPoints?: Point[],
   improveResult?: ImproveResult,
   baseMap?: Map,
+  noiseSteps?: Map[],
   heightWithNoise?: Map,
   waterFlow?: WaterFlowResult[]
 }
@@ -128,6 +130,14 @@ export default class Canvas extends React.Component<Props> {
     }
   }
 
+  [DisplayLayer.NoiseStep](context: CanvasRenderingContext2D) {
+    if (this.props.noiseSteps) {
+      const step = this.props.noiseSteps[this.props.iteration || 0]
+
+      this.drawTiles(step.tiles, context)
+    }
+  }
+
   [DisplayLayer.HeightWithNoise](context: CanvasRenderingContext2D) {
     if (this.props.heightWithNoise) {
       this.drawTiles(this.props.heightWithNoise.tiles, context)
@@ -136,7 +146,7 @@ export default class Canvas extends React.Component<Props> {
 
   [DisplayLayer.WaterFlow](context: CanvasRenderingContext2D) {
     if (this.props.waterFlow) {
-      context.strokeStyle = "#" + tinycolor("#20428F").lighten(20).toHex()
+      context.strokeStyle = tinycolor("#20428F").lighten(20).toHexString()
 
       this.props.waterFlow.filter(flow => flow.flux > 1.5).forEach(flow => {
         context.lineWidth = flow.flux / 1.5
@@ -162,16 +172,26 @@ export default class Canvas extends React.Component<Props> {
   }
 
   tileFill(tile: MapTile) {
+    if (tile.centerPoint.z === 0) {
+      return tinycolor("#20428F").lighten(10).toHexString()
+    }
+
     if (tile.centerPoint.z > 0) {
       let baseColor = tinycolor("#3FB038").lighten(20)
 
       if (tile.centerPoint.z >= 0.5) {
-        return "#" + baseColor.lighten((tile.centerPoint.z - 0.5) * 80).toHex()
+        return baseColor.lighten((tile.centerPoint.z - 0.5) * 80).toHexString()
       } else {
-        return "#" + baseColor.darken((0.5 - tile.centerPoint.z) * 50).toHex()
+        return baseColor.darken((0.5 - tile.centerPoint.z) * 50).toHexString()
       }
     } else {
-      return "#" + tinycolor("#20428F").lighten(10).toHex()
+      let baseColor = tinycolor("#20428F").lighten(10)
+
+      if (tile.centerPoint.z >= -0.5) {
+        return baseColor.lighten((tile.centerPoint.z + 0.5) * 80).toHexString()
+      } else {
+        return baseColor.darken((1 + tile.centerPoint.z) * 50).toHexString()
+      }
     }
   }
 
