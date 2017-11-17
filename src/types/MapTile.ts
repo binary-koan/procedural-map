@@ -9,13 +9,26 @@ export interface Point3D extends Point {
   z: number
 }
 
+export interface MapData {
+  tiles: [Point3D, Point3D, Point3D][],
+  neighbours: { [index: number]: number[] }
+}
+
 export class Map {
   tiles: MapTile[]
   neighbours: { [index: number]: number[] }
 
+  static deserialize(data: MapData) {
+    return new Map(data.tiles.map(vertices => new MapTile(vertices)), data.neighbours)
+  }
+
   constructor(tiles: MapTile[], neighbours: { [index: number]: number[] }) {
     this.tiles = tiles
     this.neighbours = neighbours
+  }
+
+  serialize(): MapData {
+    return { tiles: this.tiles.map(tile => tile.vertices), neighbours: this.neighbours }
   }
 }
 
