@@ -4,11 +4,13 @@
   "private": true,
   "dependencies": {
     "@types/seedrandom": "^2.4.27",
+    "@types/tinycolor2": "^1.4.0",
     "react": "^16.1.1",
     "react-dom": "^16.1.1",
     "react-scripts-ts": "2.8.0",
     "seedrandom": "^2.4.3",
     "simplex-noise": "^2.3.0",
+    "tinycolor2": "^1.4.1",
     "voronoi": "^1.0.0"
   },
   "scripts": {

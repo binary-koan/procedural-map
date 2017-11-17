@@ -3,6 +3,7 @@ import Point from "./types/Point"
 import { ImproveResult } from "./generation/tiles/improvePoints"
 import { Map, MapTile } from "./types/MapTile"
 import { WaterFlowResult } from "./generation/water/calculateWaterFlow"
+import * as tinycolor from "tinycolor2"
 
 const WIDTH = 1500
 const HEIGHT = 1000
@@ -122,10 +123,10 @@ export default class Canvas extends React.Component<Props> {
   }
 
   [DisplayLayer.WaterFlow](context: CanvasRenderingContext2D) {
-    context.strokeStyle = "#8080ff"
+    context.strokeStyle = "#" + tinycolor("#20428F").lighten(20).toHex()
 
     this.props.waterFlow.filter(flow => flow.flux > 1.5).forEach(flow => {
-      context.lineWidth = flow.flux
+      context.lineWidth = flow.flux / 1.5
       this.addPolygon([flow.start, flow.end], context)
       context.stroke()
     })
@@ -148,12 +149,15 @@ export default class Canvas extends React.Component<Props> {
 
   tileFill(tile: MapTile) {
     if (tile.centerPoint.z > 0) {
-      let strength = Math.floor(tile.centerPoint.z * 200 + 16).toString(16)
-      return "#" + strength + "ff" + strength
+      let baseColor = tinycolor("#3FB038").lighten(20)
+
+      if (tile.centerPoint.z >= 0.5) {
+        return "#" + baseColor.lighten((tile.centerPoint.z - 0.5) * 80).toHex()
+      } else {
+        return "#" + baseColor.darken((0.5 - tile.centerPoint.z) * 50).toHex()
+      }
     } else {
-      // let strength = Math.floor(128 + tile.centerPoint.z * 100).toString(16)
-      // return "#" + strength + strength + "ff"
-      return "#7070ff"
+      return "#" + tinycolor("#20428F").lighten(10).toHex()
     }
   }
 
