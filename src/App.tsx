@@ -1,19 +1,11 @@
 import * as React from "react"
 import "./App.css"
-// import randomPoints from "./generation/tiles/randomPoints"
 import { ImproveResult } from "./generation/tiles/improvePoints"
-// import RandomNumberGenerator from "./generation/RandomNumberGenerator"
 import Point from "./types/Point"
-import { Map, } from "./types/MapTile"
-// import buildMap from "./generation/height/buildMap"
-// import addNoise from "./generation/height/addNoise"
+import { Map } from "./types/MapTile"
 import { WaterFlowResult } from "./generation/water/calculateWaterFlow"
 import Canvas, { DisplayLayer } from "./Canvas"
 import { MessageFromWorker, MessageToWorker } from "./types/Message"
-
-// function pathDefinition(polygon: Point[]): string {
-//   return "M" + polygon.map(({ x, y }) => [x, y].join(" ")).join(" L") + " Z"
-// }
 
 class App extends React.Component {
   state: {
@@ -72,6 +64,7 @@ class App extends React.Component {
       initialPoints: undefined,
       improveResult: undefined,
       baseMap: undefined,
+      noiseSteps: undefined,
       heightWithNoise: undefined,
       waterFlow: undefined,
       display: []
