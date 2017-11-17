@@ -4,9 +4,10 @@ import randomPoints from "./generation/tiles/randomPoints"
 import improvePoints, { ImproveResult } from "./generation/tiles/improvePoints"
 import RandomNumberGenerator from "./generation/RandomNumberGenerator"
 import Point from "./types/Point"
-import MapTile from "./types/MapTile"
-import initializeHeightmap from "./generation/height/initializeHeightmap"
+import { Map, MapTile } from "./types/MapTile"
+import buildMap from "./generation/height/buildMap"
 import addNoise from "./generation/height/addNoise"
+import calculateWaterFlow, { WaterFlowResult } from "./generation/water/calculateWaterFlow"
 
 function pathDefinition(polygon: Point[]): string {
   return "M" + polygon.map(({ x, y }) => [x, y].join(" ")).join(" L") + " Z"
@@ -19,8 +20,9 @@ class App extends React.Component {
     display: string,
     initialPoints: Point[],
     improveResult: ImproveResult,
-    baseHeightmap: MapTile[],
-    heightWithNoise: MapTile[]
+    baseMap: Map,
+    heightWithNoise: Map,
+    waterFlow: WaterFlowResult[]
   }
 
   constructor(props: {}) {
@@ -45,15 +47,17 @@ class App extends React.Component {
       count: complexity
     })
     const improveResult = improvePoints(initialPoints)
-    const baseHeightmap = initializeHeightmap(improveResult.mapPolygons)
-    const heightWithNoise = addNoise(rng, baseHeightmap, {
+    const baseMap = buildMap(improveResult.mapPolygons, improveResult.neighbours)
+    const heightWithNoise = addNoise(rng, baseMap, {
       minScale: 150,
       maxScale: 750,
       landProportion: 0.4,
       iterations: 4
     })
 
-    return { initialPoints, improveResult, baseHeightmap, heightWithNoise }
+    const waterFlow = calculateWaterFlow(heightWithNoise)
+
+    return { initialPoints, improveResult, baseMap, heightWithNoise, waterFlow }
   }
 
   setComplexity(value: string) {
@@ -73,13 +77,17 @@ class App extends React.Component {
     this.setState({ display: `voroniStep${index}` })
   }
 
+  shownWithDisplay(...displays: string[]) {
+    return displays.includes(this.state.display) ? "group" : "group is-hidden"
+  }
+
   displayToggle(title: string, onClick: () => void) {
     return <button type="button" onClick={onClick}>{title}</button>
   }
 
   voroniResult(index: number, points: Point[], polygons: Point[][]) {
     return (
-      <g key={index} className={this.state.display === `voroniStep${index}` ? "group" : "group is-hidden"}>
+      <g key={index} className={this.shownWithDisplay(`voroniStep${index}`)}>
         {points.map((point, i) => <circle key={i} cx={point.x} cy={point.y} r="2" fill="#00f" />)}
         {polygons.map((polygon, i) => <path key={i} d={pathDefinition(polygon)} stroke="#00f" fill="none" />)}
       </g>
@@ -115,29 +123,58 @@ class App extends React.Component {
               <div key={i}>{this.displayToggle(`Voroni iteration ${i + 1}`, this.toggleVoroniStep.bind(this, i))}</div>
             )}
             {this.displayToggle("Map polygons", () => this.setState({ display: "mapPolygons" }))}
+            {this.displayToggle("Polygon neighbours", () => this.setState({ display: "polygonNeighbours" }))}
             {this.displayToggle("Base height", () => this.setState({ display: "baseHeightmap" }))}
             {this.displayToggle("Height with noise", () => this.setState({ display: "heightWithNoise" }))}
+            {this.displayToggle("Water flow", () => this.setState({ display: "waterFlow" }))}
           </div>
         </div>
 
         <svg className="App-view" viewBox="0 0 1500 1000">
-          <g className={this.state.display === "initialPoints" ? "group" : "group is-hidden"}>
+          <g className={this.shownWithDisplay("initialPoints")}>
             {this.state.initialPoints.map((point, i) => <circle key={i} cx={point.x} cy={point.y} r="2" fill="#000" />)}
           </g>
 
           {this.state.improveResult.steps.map((step, i) => this.voroniResult(i, step.points, step.polygons))}
 
-          <g className={this.state.display === "mapPolygons" ? "group" : "group is-hidden"}>
+          <g className={this.shownWithDisplay("mapPolygons", "polygonNeighbours")}>
             {this.state.improveResult.mapPolygons.map((polygon, i) =>
               <path key={i} d={pathDefinition(polygon.vertices)} stroke="#0f0" fill="none" />)}
           </g>
 
-          <g className={this.state.display === "baseHeightmap" ? "group" : "group is-hidden"}>
-            {this.state.baseHeightmap.map((tile, i) => this.tileWithHeight(tile, i))}
+          <g className={this.shownWithDisplay("polygonNeighbours")}>
+            {Object.keys(this.state.improveResult.neighbours).map(index =>
+              this.state.improveResult.neighbours[parseInt(index, 10)].map(neighbourIndex =>
+                <path
+                  key={[index, neighbourIndex].join(",")}
+                  d={pathDefinition([
+                    this.state.improveResult.mapPolygons[index].center,
+                    this.state.improveResult.mapPolygons[neighbourIndex].center
+                  ])}
+                  stroke="#800"
+                  fill="none"
+                />
+              )
+            )}
           </g>
 
-          <g className={this.state.display === "heightWithNoise" ? "group" : "group is-hidden"}>
-            {this.state.heightWithNoise.map((tile, i) => this.tileWithHeight(tile, i))}
+          <g className={this.shownWithDisplay("baseHeightmap")}>
+            {this.state.baseMap.tiles.map((tile, i) => this.tileWithHeight(tile, i))}
+          </g>
+
+          <g className={this.shownWithDisplay("heightWithNoise", "waterFlow")}>
+            {this.state.heightWithNoise.tiles.map((tile, i) => this.tileWithHeight(tile, i))}
+          </g>
+
+          <g className={this.shownWithDisplay("waterFlow")}>
+            {this.state.waterFlow.filter(flow => flow.flux > 1.5).map((flow, i) =>
+              <path
+                key={i}
+                d={pathDefinition([{ x: flow.start.x, y: flow.start.y }, { x: flow.end.x, y: flow.end.y }])}
+                stroke="#00f"
+                strokeWidth={flow.flux}
+              />
+            )}
           </g>
         </svg>
       </div>

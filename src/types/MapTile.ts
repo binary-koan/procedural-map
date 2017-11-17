@@ -9,7 +9,17 @@ export interface Point3D extends Point {
   z: number
 }
 
-export default class MapTile {
+export class Map {
+  tiles: MapTile[]
+  neighbours: { [index: number]: number[] }
+
+  constructor(tiles: MapTile[], neighbours: { [index: number]: number[] }) {
+    this.tiles = tiles
+    this.neighbours = neighbours
+  }
+}
+
+export class MapTile {
   vertices: [Point3D, Point3D, Point3D]
 
   static fromPolygon(polygon: MapPolygon) {
@@ -36,6 +46,14 @@ export default class MapTile {
 
   get highestPoint() {
     return this.vertices.sort((a, b) => b.z - a.z)[0]
+  }
+
+  get edges(): [Point3D, Point3D][] {
+    return [
+      [this.vertices[0], this.vertices[1]],
+      [this.vertices[1], this.vertices[2]],
+      [this.vertices[2], this.vertices[0]]
+    ]
   }
 
   applyNoise(noise: (x: number, y: number) => number) {

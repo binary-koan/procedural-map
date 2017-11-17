@@ -4,6 +4,7 @@ import { MapPolygon } from "../../types/MapTile"
 
 export interface ImproveResult {
   mapPolygons: MapPolygon[],
+  neighbours: { [index: number]: number[] }
   steps: { points: Point[], polygons: Point[][] }[]
 }
 
@@ -14,7 +15,7 @@ export default function improvePoints(points: Point[], stepCount: number = 3): I
   }
 
   return {
-    mapPolygons: mapPolygons(steps[steps.length - 1].diagram),
+    ...mapPolygons(steps[steps.length - 1].diagram),
     steps: steps.map(step => ({ points: step.points, polygons: step.polygons }))
   }
 }
@@ -31,14 +32,14 @@ function voroniStep(previousPoints: Point[]) {
   return { points, polygons, diagram: result }
 }
 
-function centerPoint(points: Point[]): Point {
+function centerPoint(points: Point[]) {
   const averageX = points.reduce((total, point) => total + point.x, 0) / points.length
   const averageY = points.reduce((total, point) => total + point.y, 0) / points.length
 
   return { x: averageX, y: averageY }
 }
 
-function mapPolygons(diagram: Diagram): MapPolygon[] {
+function mapPolygons(diagram: Diagram) {
   let adjacentPoints = findAdjacents(diagram)
 
   let triangles = {} as { [id: string]: MapPolygon }
@@ -58,7 +59,23 @@ function mapPolygons(diagram: Diagram): MapPolygon[] {
     })
   })
 
-  return Object.values(triangles)
+  const polygons = Object.values(triangles)
+  const neighbours = {} as { [index: number]: number[] }
+
+  polygons.forEach((polygon, i) => {
+    neighbours[i] = polygons.reduce((polygonNeighbours, p, index) => {
+      if (polygon.vertices.filter(v => p.vertices.includes(v)).length > 1) { // TODO 1 or 0?
+        return polygonNeighbours.concat([index])
+      } else {
+        return polygonNeighbours
+      }
+    }, [] as number[])
+  })
+
+  return {
+    mapPolygons: polygons,
+    neighbours
+  }
 }
 
 function findAdjacents(diagram: Diagram) {
