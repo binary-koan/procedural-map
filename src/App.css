@@ -43,6 +43,10 @@ body,
   margin-right: auto;
 }
 
+.App-view.hide {
+  display: none;
+}
+
 .group {
   transition: all 0.3s;
 }

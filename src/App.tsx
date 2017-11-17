@@ -4,20 +4,22 @@ import randomPoints from "./generation/tiles/randomPoints"
 import improvePoints, { ImproveResult } from "./generation/tiles/improvePoints"
 import RandomNumberGenerator from "./generation/RandomNumberGenerator"
 import Point from "./types/Point"
-import { Map, MapTile } from "./types/MapTile"
+import { Map } from "./types/MapTile"
 import buildMap from "./generation/height/buildMap"
 import addNoise from "./generation/height/addNoise"
 import calculateWaterFlow, { WaterFlowResult } from "./generation/water/calculateWaterFlow"
+import Canvas, { DisplayLayer } from "./Canvas"
 
-function pathDefinition(polygon: Point[]): string {
-  return "M" + polygon.map(({ x, y }) => [x, y].join(" ")).join(" L") + " Z"
-}
+// function pathDefinition(polygon: Point[]): string {
+//   return "M" + polygon.map(({ x, y }) => [x, y].join(" ")).join(" L") + " Z"
+// }
 
 class App extends React.Component {
   state: {
     complexity: number,
     seed: string,
-    display: string,
+    display: DisplayLayer[],
+    iteration?: number,
     initialPoints: Point[],
     improveResult: ImproveResult,
     baseMap: Map,
@@ -31,7 +33,7 @@ class App extends React.Component {
     const seed = "totally random"
 
     this.state = {
-      display: "",
+      display: [],
       complexity,
       seed,
       ...this.doGeneration(complexity, seed)
@@ -69,44 +71,46 @@ class App extends React.Component {
     this.setState({ seed: seed, ...this.doGeneration(this.state.complexity, seed) })
   }
 
-  toggleInitialPoints() {
-    this.setState({ display: "initialPoints" })
-  }
+  // toggleInitialPoints() {
+  //   this.setState({ display: "initialPoints" })
+  // }
 
-  toggleVoroniStep(index: number) {
-    this.setState({ display: `voroniStep${index}` })
-  }
+  // toggleVoroniStep(index: number) {
+  //   this.setState({ display: `voroniStep${index}` })
+  // }
 
-  shownWithDisplay(...displays: string[]) {
-    return displays.includes(this.state.display) ? "group" : "group is-hidden"
-  }
+  // shownWithDisplay(...displays: string[]) {
+  //   return displays.includes(this.state.display) ? "group" : "group is-hidden"
+  // }
 
-  displayToggle(title: string, onClick: () => void) {
+  displayToggle(title: string, layers: DisplayLayer[], iteration?: number) {
+    const onClick = () => this.setState({ display: layers, iteration: iteration })
+
     return <button type="button" onClick={onClick}>{title}</button>
   }
 
-  voroniResult(index: number, points: Point[], polygons: Point[][]) {
-    return (
-      <g key={index} className={this.shownWithDisplay(`voroniStep${index}`)}>
-        {points.map((point, i) => <circle key={i} cx={point.x} cy={point.y} r="2" fill="#00f" />)}
-        {polygons.map((polygon, i) => <path key={i} d={pathDefinition(polygon)} stroke="#00f" fill="none" />)}
-      </g>
-    )
-  }
+  // voroniResult(index: number, points: Point[], polygons: Point[][]) {
+  //   return (
+  //     <g key={index} className={this.shownWithDisplay(`voroniStep${index}`)}>
+  //       {points.map((point, i) => <circle key={i} cx={point.x} cy={point.y} r="2" fill="#00f" />)}
+  //       {polygons.map((polygon, i) => <path key={i} d={pathDefinition(polygon)} stroke="#00f" fill="none" />)}
+  //     </g>
+  //   )
+  // }
 
-  tileWithHeight(tile: MapTile, index: number) {
-    let fill: string
+  // tileWithHeight(tile: MapTile, index: number) {
+  //   let fill: string
 
-    if (tile.centerPoint.z > 0) {
-      let strength = Math.floor(tile.centerPoint.z * 200 + 16).toString(16)
-      fill = "#" + strength + "ff" + strength
-    } else {
-      let strength = Math.floor(128 + tile.centerPoint.z * 100).toString(16)
-      fill = "#" + strength + strength + "ff"
-    }
+  //   if (tile.centerPoint.z > 0) {
+  //     let strength = Math.floor(tile.centerPoint.z * 200 + 16).toString(16)
+  //     fill = "#" + strength + "ff" + strength
+  //   } else {
+  //     let strength = Math.floor(128 + tile.centerPoint.z * 100).toString(16)
+  //     fill = "#" + strength + strength + "ff"
+  //   }
 
-    return <path key={index} d={pathDefinition(tile.vertices)} fill={fill} />
-  }
+  //   return <path key={index} d={pathDefinition(tile.vertices)} fill={fill} />
+  // }
 
   render() {
     return (
@@ -118,19 +122,19 @@ class App extends React.Component {
           <input type="text" value={this.state.seed} onChange={e => this.setSeed(e.target.value)} />
           <h3>Display</h3>
           <div className="App-header-buttons">
-            {this.displayToggle("Initial points", this.toggleInitialPoints.bind(this))}
+            {this.displayToggle("Initial points", [DisplayLayer.InitialPoints])}
             {this.state.improveResult.steps.map((_, i) =>
-              <div key={i}>{this.displayToggle(`Voroni iteration ${i + 1}`, this.toggleVoroniStep.bind(this, i))}</div>
+              <div key={i}>{this.displayToggle(`Voroni iteration ${i + 1}`, [DisplayLayer.Voronoi], i)}</div>
             )}
-            {this.displayToggle("Map polygons", () => this.setState({ display: "mapPolygons" }))}
-            {this.displayToggle("Polygon neighbours", () => this.setState({ display: "polygonNeighbours" }))}
-            {this.displayToggle("Base height", () => this.setState({ display: "baseHeightmap" }))}
-            {this.displayToggle("Height with noise", () => this.setState({ display: "heightWithNoise" }))}
-            {this.displayToggle("Water flow", () => this.setState({ display: "waterFlow" }))}
+            {this.displayToggle("Map polygons", [DisplayLayer.MapPolygons])}
+            {this.displayToggle("Polygon neighbours", [DisplayLayer.MapPolygons, DisplayLayer.PolygonNeighbours])}
+            {this.displayToggle("Base height", [DisplayLayer.BaseHeight])}
+            {this.displayToggle("Height with noise", [DisplayLayer.HeightWithNoise])}
+            {this.displayToggle("Water flow", [DisplayLayer.HeightWithNoise, DisplayLayer.WaterFlow])}
           </div>
         </div>
 
-        <svg className="App-view" viewBox="0 0 1500 1000">
+        {/* <svg className="App-view hide" viewBox="0 0 1500 1000">
           <g className={this.shownWithDisplay("initialPoints")}>
             {this.state.initialPoints.map((point, i) => <circle key={i} cx={point.x} cy={point.y} r="2" fill="#000" />)}
           </g>
@@ -176,7 +180,17 @@ class App extends React.Component {
               />
             )}
           </g>
-        </svg>
+        </svg> */}
+
+        <Canvas
+          display={this.state.display}
+          iteration={this.state.iteration}
+          initialPoints={this.state.initialPoints}
+          improveResult={this.state.improveResult}
+          baseMap={this.state.baseMap}
+          heightWithNoise={this.state.heightWithNoise}
+          waterFlow={this.state.waterFlow}
+        />
       </div>
     )
   }
